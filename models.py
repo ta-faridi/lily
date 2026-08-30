@@ -8,7 +8,7 @@ from sqlalchemy.dialects.postgresql import ARRAY
 class Base(DeclarativeBase):
     pass
 
-class TaskStatus(Enum):
+class ActionStatus(Enum):
     TO_DO = "to do"
     IN_PROGRESS = "in progress"
     ON_HOLD = "on hold"
@@ -16,7 +16,7 @@ class TaskStatus(Enum):
     IN_REVIEW = "in review"
     CANCELED = "canceled"
 
-class TaskPriority(IntEnum):
+class ActionPriority(IntEnum):
     TRIVIAL = 1
     LOW = 2
     MEDIUM = 3
@@ -34,9 +34,9 @@ class Action(Base):
     is_boxy: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     minutes_per_unit: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     tags: Mapped[List[str]] = mapped_column(ARRAY(String), nullable=False, server_default="{}", default_factory=list)
-    status: Mapped[TaskStatus] = mapped_column(SQLEnum(TaskStatus), nullable=False, default=TaskStatus.TO_DO, server_default=TaskStatus.TO_DO.value)
+    status: Mapped[ActionStatus] = mapped_column(SQLEnum(ActionStatus), nullable=False, default=ActionStatus.TO_DO, server_default=ActionStatus.TO_DO.value)
     due_date: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True, default=None)
-    priority: Mapped[TaskPriority] = mapped_column(Integer, nullable=False, default=TaskPriority.MEDIUM, server_default="3")
+    priority: Mapped[ActionPriority] = mapped_column(Integer, nullable=False, default=ActionPriority.MEDIUM, server_default="3")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
