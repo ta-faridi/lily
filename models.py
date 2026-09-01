@@ -1,4 +1,4 @@
-from sqlalchemy import Integer, Identity, String, Boolean, DateTime, func, Enum as SQLEnum
+from sqlalchemy import Integer, Identity, String, Boolean, DateTime, func, Enum as SQLEnum, CheckConstraint
 from enum import Enum, IntEnum
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from datetime import datetime
@@ -30,44 +30,52 @@ class Action(Base):
     id: Mapped[int] = mapped_column(Integer, Identity(start=1), primary_key=True, index=True)
     title: Mapped[str] = mapped_column(String(100), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(String(750), nullable=True)
-    xp: Mapped[int] = mapped_column(Integer, nullable=False)
+    xp_value: Mapped[int] = mapped_column(Integer, nullable=False)
     is_boxy: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     minutes_per_unit: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    tags: Mapped[List[str]] = mapped_column(ARRAY(String), nullable=False, server_default="{}", default_factory=list)
+    tags: Mapped[List[str]] = mapped_column(ARRAY(String), nullable=False, server_default="{}", default=list)
     status: Mapped[ActionStatus] = mapped_column(SQLEnum(ActionStatus), nullable=False, default=ActionStatus.TO_DO, server_default=ActionStatus.TO_DO.value)
     due_date: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True, default=None)
     priority: Mapped[ActionPriority] = mapped_column(Integer, nullable=False, default=ActionPriority.MEDIUM, server_default="3")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
+    __table_args__ = (
+        CheckConstraint("minutes_per_unit >= 0", name="check_mins_positive"),
+        CheckConstraint("xp_value >= 0", name="check_xp_positive"),
+    )
+
 class Reward(Base):
     __tablename__ = "rewards"
-    # columns
-        """
-        id
-        title
-        how much xp does it cost?
-        status -> unlock or not?
-        status -> consumed or not?
-        created_at
-        updated_at
-        """
+    
+    id: Mapped[int] = mapped_column(Integer, Identity(start=1), primary_key=True, index=True)
+    title: Mapped[str] = mapped_column(String(150), nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(String(750), nullable=True)
+    xp_price: Mapped[int] = mapped_column(Integer, nullable=False)
+    is_purchased: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    is_consumed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
-# I should apply the same syntax of my notebook for the app
-# search what other things you should apply
+    __table_args__ = (
+        CheckConstraint("xp_price >= 0", name="check_xp_positive"),
+    )
 
-class UserProfile(Base):
-    __tablename__ = "user_profile"
+# # I should apply the same syntax of my notebook for the app
+# # search what other things you should apply
 
-    #columns
-    """
-    probably:
-    id
-    total_xp_eanred from the start
-    current xp which means the xp that actually has left for user to use
-    current level - not sure still about it, if applied, should consider how exactly should calculate it
-    created_at
-    I don't know if I should consider the case of all the users or stay on local use
-    """
+# class UserProfile(Base):
+#     __tablename__ = "user_profile"
 
-# also I think I need another table for gathering logs, history of all the actions of the user, not sure
+#     #columns
+#     """
+#     probably:
+#     id
+#     total_xp_eanred from the start
+#     current xp which means the xp that actually has left for user to use
+#     current level - not sure still about it, if applied, should consider how exactly should calculate it
+#     created_at
+#     I don't know if I should consider the case of all the users or stay on local use
+#     """
+
+# # also I think I need another table for gathering logs, history of all the actions of the user, not sure

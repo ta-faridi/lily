@@ -1,6 +1,5 @@
 from typing import Optional, List
 from pydantic import BaseModel, Field, ConfigDict
-from pydantic.types import Partial
 from datetime import datetime
 from enum import Enum, IntEnum
 
@@ -22,8 +21,8 @@ class ActionPriority(IntEnum):
 class ActionBase(BaseModel):
     title: str = Field(..., min_length=1, max_length= 100, description="Title of the action", examples=["Read book X, chapters 6 & 7", "45 minutes exercise session", "Study Math 40 minutes session", "Memorizing Algorithms flashcards"])
     description: Optional[str] = Field(None, max_length=750)
-    xp: int = Field(..., description="xp value")
-    ix_boxy: bool = Field(default=False, description="") 
+    xp: int = Field(..., ge=0, description="xp value")
+    is_boxy: bool = Field(default=False, description="") 
     minutes_per_unit: int = Field(ge=0, default=0, description="Allocated minutes per time box") # I don't know about this one. This behaviour only will be applied if the action is a boxy one.
     tags: List[str] = Field(default_factory=list, max_length=10, description="Tags for categorization")
     status: ActionStatus = Field(default=ActionStatus.TO_DO, description="Current status of the action")
@@ -49,4 +48,28 @@ class ActionUpdate(ActionBase):
     due_date: Optional[datetime] = Field(None)
     priority: Optional[ActionPriority] = Field(None)
     
+    model_config = ConfigDict(from_attributes=True)
+
+class RewardBase(BaseModel):
+    title: str = Field(..., min_length=1, max_length=150, description="Title of the reward", examples=["Exercise session", "Read a novel", "Puzzle playing", "Drawing"])
+    description: Optional[str] = Field(None, max_length=750)
+    xp: int = Field(..., ge=0, description="xp price")
+    is_purchased: bool = Field(default=False, description="user can purchase the reward with earned xp")
+    is_consumed: bool = Field(default=False, description="user did and spent time on the reward or not")
+
+class RewardCreate(RewardBase):
+    pass
+
+class RewardResponse(RewardBase):
+    id: int
+
+    model_config = ConfigDict(from_attributes=True)
+
+class RewardUpdate(RewardBase):
+    title: Optional[str] = Field(None, min_length=1, max_length=150)
+    description: Optional[str] = Field(None, max_length=750)
+    xp: Optional[int] = Field(None)
+    is_purchased: Optional[bool] = Field(None)
+    is_consumed: Optional[bool] = Field(None)
+
     model_config = ConfigDict(from_attributes=True)
